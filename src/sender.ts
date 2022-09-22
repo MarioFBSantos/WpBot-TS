@@ -1,38 +1,61 @@
 import {create, Whatsapp, Message, SocketState} from "venom-bot";
 import {start} from "repl";
 // @ts-ignore
-import parsePhonenumber, {isValidPhonenumber} from "libphonenumber-js";
+import parsePhoneNumber, {isValidPhoneNumber} from "libphonenumber-js";
+
+export type QRCode = {
+    base64Qr: string;
+}
 
 class Sender{
-    private client: Whatsapp
+    private client: Whatsapp;
+    private connected: boolean;
+    private qr: QRCode;
+
+    get isConnected(): boolean {
+        return this.connected;
+    }
+
+    get qrCode(): QRCode {
+        return this.qr
+    }
 
     constructor(){
         this.initialize();
     }
 
+    async listenToMessages(){
+        this.client.onMessage(
+            message => {
+                console.log(message);
+            }
+        );
+    }
+
     async sendText(to: string, body: string){
 
-        if(!isValidPhonenumber(to,"BR")){
-            throw new Error('this number isnt valid')
-        }
 
-        let phoneNumber = parsePhonenumber(to, "BR").format("E.164");
+        let phoneNumber = parsePhoneNumber(to, "BR")?.format("E.164")?.replace('+', "") as string;
         phoneNumber = phoneNumber.includes("@c.us") ? phoneNumber : `${phoneNumber}@c.us`;
+
+        console.log("phoneNumber: ", phoneNumber)
 
         await this.client.sendText(to, body);
     }
 
-    // async getText(to: string, body: any){
-    //     await this.client.getAllNewMessages();
-    // }
     
     private initialize(){
-        const qr = (base64Qrimg: string) => {}
+        const qr = (base64Qr: string) => {
+            this.qr = { base64Qr }
+        }
 
-        const status = (statusSession: string, session: string) => {}
+        const status = (statusSession: string, session: string) => {
+            this.connected = ["isLogged", "qrReadSuccess", "chatsAvaible"].includes(statusSession)
+        }
 
         const start = (client: Whatsapp) => {
             this.client = client
+            this.listenToMessages();
         }
 
         create('ws-sender-dev', qr)
