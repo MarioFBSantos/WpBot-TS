@@ -1,6 +1,6 @@
 # WpBot-TS
 
-Creating a whatsapp bot in typescript
+Creating a whatsapp bot in typescript (just the base, my main bot will remain in a private project)
 
 # Starting
 
